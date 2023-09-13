@@ -1,0 +1,27 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: webapp
+spec:
+  # SA that needs to be added to k8s auth role
+  serviceAccountName: webapp-sa
+  containers:
+  - image: jweissig/app:0.0.1
+    name: webapp
+    volumeMounts:
+    # VolumeMount references CSI Secret Volume defined under volumes section
+    - name: secrets-store-inline
+    # Retrieved secret from vault will be mounted at this path
+      mountPath: "/mnt/secrets-store"
+      readOnly: true
+  volumes:
+    # Arbitrary name for volume
+    - name: secrets-store-inline
+      # Defines volume as CSI volume type
+      csi:
+      # Specifies the name of the kubernetes CSI driver used to talk to vault provider
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          # Custom resource, that specifies how to connect to vault and what secret to retreive
+          secretProviderClass: "vault-database"
