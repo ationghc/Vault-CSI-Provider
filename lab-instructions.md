@@ -7,42 +7,42 @@
 
 # Steps
 
-* Upgrade Vault Helm to include CSI pod
+1. Upgrade Vault Helm to include CSI pod
    * `helm upgrade vault hashicorp/vault -f vault-values.yaml --set csi.enabled=true --set injector.enabled=false`
-* Create app to use CSI secret store volume
+2. Create app to use CSI secret store volume
    * `kubectl apply -f Deployment-csi.yaml`
-* Check why webapp-pod isn't starting
+3. Check why webapp-pod isn't starting
    * kubectl describe pod webapp`
  
 ```
 Warning  FailedMount  3s (x5 over 10s)  kubelet            MountVolume.SetUp failed for volume "secrets-store-inline" : kubernetes.io/csi: mounter.SetUpAt failed to get CSI client: driver name secrets-store.csi.k8s.io not found in the list of registered CSI drivers
 ```
 
-* Add CSI repo
+4. Add CSI repo
    * `helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts`
-* Install CSI Helm chart
+5. Install CSI Helm chart
    * `helm install csi secrets-store-csi-driver/secrets-store-csi-driver --set syncSecret.enabled=true`
-* Scale webapp deployment
+6. Scale webapp deployment
    * `kubectl scale deployment webapp --replicas=0`
    * `kubectl scale deployment webapp --replicas=1`
-* Check why webapp-pod isn't starting
+7. Check why webapp-pod isn't starting
    * `kubectl describe pod webapp`
    
 ```
 Warning  FailedMount  0s (x4 over 4s)  kubelet            MountVolume.SetUp failed for volume "secrets-store-inline" : rpc error: code = Unknown desc = failed to get secretproviderclass default/vault-database, error: SecretProviderClass.secrets-store.csi.x-k8s.io "vault-database" not found
 ```
 
-* Create a secretProviderClass
+9. Create a secretProviderClass
    * `kubectl apply --filename SecretProviderClass.yaml`
-* Scale webapp deployment
+10. Scale webapp deployment
    * `kubectl scale deployment webapp --replicas=0`
    * `kubectl scale deployment webapp --replicas=1`
-* Check why webapp-pod isn't starting
+11. Check why webapp-pod isn't starting
    * `kubectl describe pod webapp`
-* Scale webapp deployment
+12. Scale webapp deployment
    * `kubectl scale deployment webapp --replicas=0`
    * `kubectl scale deployment webapp --replicas=1`
-* Check why webapp-pod isn't starting
+13. Check why webapp-pod isn't starting
    * `kubectl describe pod webapp`
 
 ```
@@ -53,15 +53,15 @@ Code: 400. Errors:
 
 * invalid role name "app"
 ```
-* Check role that is being used for k8s auth in Vault pod
+14. Check role that is being used for k8s auth in Vault pod
    * `kubectl exec -ti vault-0 -- vault list auth/kubernetes/role`
-* Update role in SecretProviderClass to use role in k8s auth method
-* Re-create secretproviderclass
+15. Update role in SecretProviderClass to use role in k8s auth method
+16. Re-create secretproviderclass
    * `kubectl replace --filename SecretProviderClass.yaml`
-* Scale webapp deployment
+17. Scale webapp deployment
    * `kubectl scale deployment webapp --replicas=0`
    * `kubectl scale deployment webapp --replicas=1`
-* Check why webapp-pod isn't starting
+18. Check why webapp-pod isn't starting
    * `kubectl describe pod webapp`
 
 ```
@@ -72,13 +72,13 @@ Code: 403. Errors:
 * permission denied 
 ```
 
-* Check secrets path in Vault
+19. Check secrets path in Vault
    * `kubectl exec -ti vault-0 -- vault secrets list`
-* Update objects in SecretProviderClass to match path to secret in Vault
-* Re-create secretproviderclass
+20. Update objects in SecretProviderClass to match path to secret in Vault
+21. Re-create secretproviderclass
    * `kubectl replace --filename SecretProviderClass.yaml`
-* Scale webapp deployment
+22. Scale webapp deployment
    * `kubectl scale deployment webapp --replicas=0`
    * `kubectl scale deployment webapp --replicas=1`
-* Display secret written to the file system on the pod
-   * `kubectl exec <webapp> -- cat /mnt/secrets-store/test-object`
+23. Display secret written to the file system on the pod
+  * `kubectl exec <webapp> -- cat /mnt/secrets-store/test-object`
